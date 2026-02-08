@@ -2,3 +2,5 @@ customtkinter==5.2.2
 pyperclip==1.11.0
 streamlit==1.54.0
 pillow==10.1.0
+beautifulsoup4==4.12.2
+requests==2.32.0

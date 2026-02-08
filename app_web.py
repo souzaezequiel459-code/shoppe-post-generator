@@ -3,6 +3,7 @@ import json
 import os
 import time
 from datetime import datetime
+from scraper_utils import extrair_dados_produto
 
 st.set_page_config(page_title="🛒 Gerador de Posts Multiplatforma", layout="wide")
 
@@ -34,11 +35,31 @@ col1, col2 = st.columns([1, 1], gap="medium")
 with col1:
     st.subheader("📝 Informações do Produto")
     
-    produto = st.text_input("Nome do Produto", placeholder="Ex: Fone Bluetooth")
-    preco = st.text_input("Preço", placeholder="Ex: 89,90")
-    desconto = st.number_input("Desconto (%)", min_value=0, max_value=100, value=0)
     link = st.text_input("Link", placeholder="https://...")
-    avaliacao = st.slider("Avaliação ⭐", 0.0, 5.0, 4.5, step=0.5)
+    
+    # Botão para extrair dados automaticamente
+    if st.button("🔍 Extrair dados do link", use_container_width=True):
+        if link.startswith('http'):
+            with st.spinner('Extraindo dados...'):
+                dados = extrair_dados_produto(link)
+                if dados['sucesso']:
+                    st.session_state['produto_nome'] = dados['titulo']
+                    st.session_state['produto_preco'] = dados['preco']
+                    st.session_state['produto_descricao'] = dados['descricao']
+                    if dados['imagem_local']:
+                        st.session_state['img_path'] = dados['imagem_local']
+                    st.success("✅ Dados extraídos!")
+                    st.rerun()
+                else:
+                    st.error(f"Erro: {dados.get('erro', 'Não foi possível extrair')}")
+        else:
+            st.error("Cole um link válido (https://...)")
+    
+    st.divider()
+    
+    produto = st.text_input("Nome do Produto", value=st.session_state.get('produto_nome', ''), placeholder="Ex: Fone Bluetooth")
+    preco = st.text_input("Preço", value=st.session_state.get('produto_preco', ''), placeholder="Ex: 89,90")
+    desconto = st.number_input("Desconto (%)", min_value=0, max_value=100, value=0)
     
     with st.expander("📦 Detalhes"):
         estoque = st.text_input("Estoque", placeholder="Limitado")
@@ -129,7 +150,7 @@ with col2:
     
     if gerar or st.session_state.get("post_gerado"):
         img_path = st.session_state.get("img_path")
-        post = gerar_post(produto, preco, link, plataforma, estilo, tom, avaliacao, desconto, estoque, frete, condicao, img_path)
+        post = gerar_post(produto, preco, link, plataforma, estilo, tom, 4.5, desconto, estoque, frete, condicao, img_path)
         
         if post:
             st.session_state.post_gerado = post

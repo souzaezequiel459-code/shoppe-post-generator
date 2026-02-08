@@ -3,6 +3,8 @@ import pyperclip
 from datetime import datetime
 import json
 import os
+from tkinter import filedialog as fd
+from PIL import Image, ImageTk
 
 # Configuração visual
 ctk.set_appearance_mode("dark")
@@ -49,6 +51,10 @@ class App(ctk.CTk):
         self.link = ctk.CTkEntry(left_frame, placeholder_text="https://shopee.com.br/...")
         self.link.pack(fill="x", padx=10, pady=(0, 10))
         
+        # Botão para escolher imagem
+        self.btn_img = ctk.CTkButton(left_frame, text="📷 Escolher Imagem", command=self.selecionar_imagem)
+        self.btn_img.pack(fill="x", padx=10, pady=(0, 10))
+        
         ctk.CTkLabel(left_frame, text="Avaliação (⭐):").pack(anchor="w", padx=10)
         self.avaliacao = ctk.CTkSlider(left_frame, from_=0, to=5, number_of_steps=10)
         self.avaliacao.set(4.5)
@@ -80,7 +86,11 @@ class App(ctk.CTk):
         ctk.CTkLabel(right_frame, text="👁️ Preview", font=("Arial", 16, "bold")).pack(pady=10)
         
         # Text widget para preview
-        self.preview = ctk.CTkTextbox(right_frame, width=400, height=350)
+        # Label para imagem
+        self.image_label = ctk.CTkLabel(right_frame, text="")
+        self.image_label.pack(padx=10, pady=(0, 10))
+
+        self.preview = ctk.CTkTextbox(right_frame, width=400, height=250)
         self.preview.pack(fill="both", expand=True, padx=10, pady=(0, 10))
         
         # Contador de caracteres
@@ -231,6 +241,20 @@ LINK: {l}
         
         self.status.configure(text="✨ Post gerado com sucesso!")
 
+
+    def selecionar_imagem(self):
+        path = fd.askopenfilename(filetypes=[('Imagens', '*.png;*.jpg;*.jpeg')])
+        if path:
+            try:
+                img = Image.open(path)
+                img.thumbnail((400, 300))
+                self.tk_image = ImageTk.PhotoImage(img)
+                self.image_label.configure(image=self.tk_image, text="")
+                self.image_path = path
+                self.status.configure(text="✅ Imagem carregada")
+            except Exception as e:
+                self.status.configure(text=f"⚠️ Erro ao abrir imagem: {e}")
+
     def copiar_clipboard(self):
         """Copia o post para a área de transferência"""
         texto = self.preview.get("1.0", "end").strip()
@@ -250,6 +274,7 @@ LINK: {l}
                 "tempo": datetime.now().strftime("%d/%m/%Y %H:%M"),
                 "produto": produto,
                 "preco": self.preco.get(),
+                "image": getattr(self, 'image_path', None),
                 "post": texto
             }
             self.historico_posts.append(post_data)

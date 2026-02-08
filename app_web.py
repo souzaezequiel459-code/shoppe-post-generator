@@ -42,6 +42,20 @@ with col1:
     desconto = st.number_input("Desconto (%)", min_value=0, max_value=100, value=0)
     link = st.text_input("Link do Produto", placeholder="https://exemplo.com.br/...", key="link")
     
+    # Upload de imagem
+    uploaded = st.file_uploader("Imagem do produto", type=["png", "jpg", "jpeg"], key="uploaded")
+    if uploaded:
+        import os, time
+        os.makedirs("uploads", exist_ok=True)
+        filename = f"{int(time.time())}_{uploaded.name}"
+        path = os.path.join("uploads", filename)
+        with open(path, "wb") as f:
+            f.write(uploaded.getbuffer())
+        st.session_state["uploaded_path"] = path
+        st.image(path, use_column_width=True)
+    else:
+        # manter caminho entre reruns
+        _ = st.session_state.get("uploaded_path")
     avaliacao = st.slider("Avaliação do Produto ⭐", 0.0, 5.0, 4.5, step=0.5)
     
     # Detalhes adicionais
@@ -50,7 +64,7 @@ with col1:
         frete = st.toggle("Frete Grátis?", value=True)
         condicao = st.selectbox("Condição", ["Novo", "Seminovo", "Recondicionado"])
 
-def gerar_post(produto_nome, preco_valor, link_af, plataforma_selecionada, estilo_selecionado, ton_post, aval, desc, est, frete_gratis, cond):
+def gerar_post(produto_nome, preco_valor, link_af, plataforma_selecionada, estilo_selecionado, ton_post, aval, desc, est, frete_gratis, cond, imagem_path=None):
     """Gera posts específicos para cada plataforma"""
     
     if not all([produto_nome, preco_valor, link_af]):
